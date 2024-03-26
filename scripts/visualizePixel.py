@@ -7,7 +7,14 @@ import sys
 
 ######## run options ##############
 
-interpolate = False
+##	Run like:
+##	visualizePixel.py <csv file xz scan> <csv file xy scan>
+##	
+##	Hardcoded for files:
+##		Laser_root_files/out/2D_output_Astropix_W2_S9_pix0_00_100V_2D_zscan2.csv
+##		Laser_root_files/out/2D_output_Astropix_W2_S9_pix0_00_2D_xyscan_100V.csv
+
+interpolate = True
 savePlot = False
 
 ######### import file1 ###########
@@ -42,7 +49,7 @@ X2, Z2 = np.meshgrid(x2,z2)
 dat=interp((X2, Z2))
 
 if interpolate:
-	#plot interpolation
+	#plot interpolation for second input only 
 	fig = plt.figure()
 	ax = fig.add_subplot(111, projection='3d')
 	nm="interp_linear"
@@ -53,7 +60,7 @@ if interpolate:
 	plt.ylabel('y[um] - along pixel')
 	ax.set_zlabel('z[um] - into bulk')
 	fig.tight_layout()
-	if savePlots:
+	if savePlot:
 		plt.savefig("sandbox_100V_xz_W02S09/"+nm+".png")
 		plt.savefig("sandbox_100V_xz_W02S09/"+nm+".pdf")
 	else:
