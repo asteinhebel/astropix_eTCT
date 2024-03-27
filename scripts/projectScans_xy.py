@@ -24,6 +24,11 @@ labels = ["40V", "100V", "180V", "230V"]
 #files = ["2D_output_Astropix_W10_S9_pix0_01_2D_xyscan_2V", "2D_output_Astropix_W10_S9_pix0_01_2D_xyscan_4V", "2D_output_Astropix_W10_S9_pix0_01_2D_xyscan_8V", "2D_output_Astropix_W10_S9_pix0_01_2D_xyscan_10V"]
 #labels = ["2V", "4V", "8V", "10V"]
 
+#fine x
+#chip = "W02S09"
+#files = ["2D_output_Astropix_W2_S9_pix0_02_2D_xyscan_100V_3_finex", "2D_output_Astropix_W2_S9_pix0_02_2D_xyscan_200V_3_finex"]
+#labels = ["100V", "200V"]
+
 profile_dfs=[]
 grid_arrs=[]
 x_arr=[]
@@ -83,10 +88,15 @@ for i,f in enumerate(files):
 	x_arr.append(sum_cols)
 	y_arr.append(sum_rows)
 	
+	####### define noise/background level ###################
+	#Average deposits of last 3 columns (beyond chip into PCB)
+	aveNoise = np.sum(data_arr[:,-3:])/3/len(data_arr)
+	
 	if core:
 		max_pixel = data_arr.max()
 		core_arr = data_arr.copy()
-		core_arr[core_arr<max_pixel/2.] = np.nan
+		core_arr[core_arr<max_pixel/2.] = np.nan #within 50% of max deposit
+		core_arr[core_arr<aveNoise] = np.nan #if hit is within noise
 		sum_rows_core, sum_cols_core = np.nansum(core_arr, axis=0), np.nansum(core_arr, axis=1)
 		if average:
 			sum_rows_core = sum_rows_core/np.count_nonzero(~np.isnan(sum_rows_core))
