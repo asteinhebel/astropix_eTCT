@@ -20,9 +20,9 @@ chip = "W02S09"
 files = ["2D_output_Astropix_W2_S9_pix0_00_2D_xyscan_40V", "2D_output_Astropix_W2_S9_pix0_00_2D_xyscan_100V", "2D_output_Astropix_W2_S9_pix0_00_2D_xyscan_180V", "2D_output_Astropix_W2_S9_pix0_00_2D_xyscan_230V"]
 labels = ["40V", "100V", "180V", "230V"]
 
-#chip = "W10S02"
-#files = ["2D_output_Astropix_W10_S9_pix0_01_2D_xyscan_2V", "2D_output_Astropix_W10_S9_pix0_01_2D_xyscan_4V", "2D_output_Astropix_W10_S9_pix0_01_2D_xyscan_8V", "2D_output_Astropix_W10_S9_pix0_01_2D_xyscan_10V"]
-#labels = ["2V", "4V", "8V", "10V"]
+chip = "W10S02"
+files = ["2D_output_Astropix_W10_S9_pix0_01_2D_xyscan_2V", "2D_output_Astropix_W10_S9_pix0_01_2D_xyscan_4V", "2D_output_Astropix_W10_S9_pix0_01_2D_xyscan_8V", "2D_output_Astropix_W10_S9_pix0_01_2D_xyscan_10V"]
+labels = ["2V", "4V", "8V", "10V"]
 
 #fine x
 #chip = "W02S09"
@@ -41,6 +41,7 @@ savePlot = True
 average = False #plot average peak value for profile ../plots. If False, plot total
 core = True #plot core region in profile plots as well as total
 out_str = '_core' if core else ''
+plt_name_str = "average" if average else "total"
 
 ######### import files ###########
 for i,f in enumerate(files):
@@ -142,8 +143,8 @@ for i,f in enumerate(files):
 	plt.legend([p1, p2], labels=["full array", "core"], loc=[0.27, 1.2])#"upper right") 
 	#save
 	if savePlot:
-		plt.savefig(f"../plots/sandbox_xy_{chip}/xy_arrs_{labels[i]}{out_str}.png")
-		plt.savefig(f"../plots/sandbox_xy_{chip}/xy_arrs_{labels[i]}{out_str}.pdf")
+		plt.savefig(f"../plots/sandbox_xy_{chip}/xy_arrs_{plt_name_str}_{labels[i]}{out_str}.png")
+		plt.savefig(f"../plots/sandbox_xy_{chip}/xy_arrs_{plt_name_str}_{labels[i]}{out_str}.pdf")
 		plt.clf()
 	else:
 		plt.show()
@@ -166,7 +167,6 @@ else:
 	plt.show()
 	
 ####### plotting for sums #########
-plt_name_str = "average" if average else "total"
 fig = plt.figure()
 ax = fig.add_subplot(111)
 for k,x in enumerate(x_arr):
