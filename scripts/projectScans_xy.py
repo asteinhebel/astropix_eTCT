@@ -20,9 +20,9 @@ chip = "W02S09"
 files = ["2D_output_Astropix_W2_S9_pix0_00_2D_xyscan_40V", "2D_output_Astropix_W2_S9_pix0_00_2D_xyscan_100V", "2D_output_Astropix_W2_S9_pix0_00_2D_xyscan_180V", "2D_output_Astropix_W2_S9_pix0_00_2D_xyscan_230V"]
 labels = ["40V", "100V", "180V", "230V"]
 
-chip = "W10S02"
-files = ["2D_output_Astropix_W10_S9_pix0_01_2D_xyscan_2V", "2D_output_Astropix_W10_S9_pix0_01_2D_xyscan_4V", "2D_output_Astropix_W10_S9_pix0_01_2D_xyscan_8V", "2D_output_Astropix_W10_S9_pix0_01_2D_xyscan_10V"]
-labels = ["2V", "4V", "8V", "10V"]
+#chip = "W10S02"
+#files = ["2D_output_Astropix_W10_S9_pix0_01_2D_xyscan_2V", "2D_output_Astropix_W10_S9_pix0_01_2D_xyscan_4V", "2D_output_Astropix_W10_S9_pix0_01_2D_xyscan_8V", "2D_output_Astropix_W10_S9_pix0_01_2D_xyscan_10V"]
+#labels = ["2V", "4V", "8V", "10V"]
 
 #fine x
 #chip = "W02S09"
@@ -40,6 +40,7 @@ y_arr_core=[]
 savePlot = True
 average = False #plot average peak value for profile ../plots. If False, plot total
 core = True #plot core region in profile plots as well as total
+coreScale = 1/2. #3/4.
 out_str = '_core' if core else ''
 plt_name_str = "average" if average else "total"
 
@@ -96,8 +97,7 @@ for i,f in enumerate(files):
 	if core:
 		max_pixel = data_arr.max()
 		core_arr = data_arr.copy()
-		core_arr[core_arr<max_pixel/2.] = np.nan #within 50% of max deposit
-		core_arr[core_arr<aveNoise] = np.nan #if hit is within noise
+		core_arr[core_arr<np.max([(max_pixel*coreScale), aveNoise])] = np.nan #only consider hits with more energy than either the noise floor OR x% of the max deposit, whichever leads to a higher floor
 		sum_rows_core, sum_cols_core = np.nansum(core_arr, axis=0), np.nansum(core_arr, axis=1)
 		if average:
 			sum_rows_core = sum_rows_core/np.count_nonzero(~np.isnan(sum_rows_core))
@@ -140,7 +140,8 @@ for i,f in enumerate(files):
 		axHisty.plot(sum_rows_core, y_step, ds="steps")
 	axHistx.set_xlim(axScatter.get_xlim())
 	axHisty.set_ylim(axScatter.get_ylim())
-	plt.legend([p1, p2], labels=["full array", "core"], loc=[0.27, 1.2])#"upper right") 
+	if core:
+		plt.legend([p1, p2], labels=["full array", "core"], loc=[0.27, 1.2])#"upper right") 
 	#save
 	if savePlot:
 		plt.savefig(f"../plots/sandbox_xy_{chip}/xy_arrs_{plt_name_str}_{labels[i]}{out_str}.png")
