@@ -2,11 +2,11 @@ from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 from matplotlib.ticker import NullFormatter
 from scipy.interpolate import RegularGridInterpolator
+from scipy.optimize import curve_fit
 import numpy as np
 import pandas as pd
 import sys, glob
 import corner
-
 
 ##
 ##	Run like:
@@ -14,6 +14,28 @@ import corner
 ##
 ##	Update 'chip', 'files', 'lables' with files of interest
 
+def Gauss(x, A, mu, sigma):
+	"""Gaussian function used for fitting, defining free parameters"""
+	return A*np.exp(-(x-mu)**2/(2.0*sigma**2))
+
+def fitHist(binCenters, ydata, label='data', amp=-1, mu=-1, sig=-1):
+	"""Fit input data from a previously made histogram to a Gaussian function
+	Return: covariance fit matrix """
+	#if no arguments given, try to compute best guess
+	if amp==-1:	
+		amp = np.max(np.array(ydata))*0.9
+	if mu==-1:	
+		mu = binCenters[np.argmax(ydata)]
+	if sig==-1:
+		sig = mu/2.
+	p0=[amp,mu,sig]
+	yStatErr = [np.sqrt(x) for x in ydata]
+	try:
+		popt, pcov = curve_fit(Gauss, xdata=binCenters, ydata=ydata, p0=p0, absolute_sigma=True)#, sigma=yStatErr)
+	except RuntimeError:
+		popt = [np.NaN, np.NaN, np.NaN]
+	return popt	
+	
 
 ######### Define global variables ###########
 chip = "W02S09"
@@ -29,6 +51,10 @@ labels = ["40V", "100V", "180V", "230V"]
 #files = ["2D_output_Astropix_W2_S9_pix0_02_2D_xyscan_100V_3_finex", "2D_output_Astropix_W2_S9_pix0_02_2D_xyscan_200V_3_finex"]
 #labels = ["100V", "200V"]
 
+#chip = "W06S04"
+#files = ["2D_output_Astropix_W6_S4_pix0_00_2D_xyscan_50V", "2D_output_Astropix_W6_S4_pix0_00_2D_xyscan_100V", "2D_output_Astropix_W6_S4_pix0_00_2D_xyscan_200V", "2D_output_Astropix_W6_S4_pix0_00_2D_xyscan_300V", "2D_output_Astropix_W6_S4_pix0_00_2D_xyscan_400V"]
+#labels = ["50V", "100V", "200V", "300V", "400V"]
+
 profile_dfs=[]
 grid_arrs=[]
 x_arr=[]
@@ -37,10 +63,10 @@ x_arr_core=[]
 y_arr_core=[]
 
 
-savePlot = True
+savePlot = False
 average = False #plot average peak value for profile ../plots. If False, plot total
 core = True #plot core region in profile plots as well as total
-coreScale = 1/2. #3/4.
+coreScale =  1/2. 
 out_str = '_core' if core else ''
 plt_name_str = "average" if average else "total"
 
@@ -105,6 +131,7 @@ for i,f in enumerate(files):
 		x_arr_core.append(sum_cols_core)
 		y_arr_core.append(sum_rows_core)
 
+	####### create plot ###################
 	#definitions for the axes
 	left, width = 0.1, 0.65
 	bottom, height = 0.1, 0.65
@@ -141,7 +168,7 @@ for i,f in enumerate(files):
 	axHistx.set_xlim(axScatter.get_xlim())
 	axHisty.set_ylim(axScatter.get_ylim())
 	if core:
-		plt.legend([p1, p2], labels=["full array", "core"], loc=[0.27, 1.2])#"upper right") 
+		plt.legend(["full array", "core"], loc=[0.27, 1.2])
 	#save
 	if savePlot:
 		plt.savefig(f"../plots/sandbox_xy_{chip}/xy_arrs_{plt_name_str}_{labels[i]}{out_str}.png")
@@ -167,15 +194,20 @@ if savePlot:
 else:
 	plt.show()
 	
-####### plotting for sums #########
+####### plotting for sums/averages #########
+#plot
 fig = plt.figure()
 ax = fig.add_subplot(111)
+
 for k,x in enumerate(x_arr):
 	img = ax.plot(x_step, x, ds='steps', label=labels[k])
 if core:
 	plt.gca().set_prop_cycle(None) #reset colors
 	for k,x in enumerate(x_arr_core):
 		img2 = ax.plot(x_step, x, ds='steps', linestyle='dashed', label=labels[k]+"_core")
+		#calculate base width (only with core) with Gaussian
+		ft = fitHist(x_step, x, sig=100.)
+		print(f"{labels[k]} FWHM = {2.355*ft[2]}")
 plt.xlabel('x [um] - toward PCB')
 plt.ylabel(f'{plt_name_str} analog pulse height [mV]')
 plt.title(f'{plt_name_str} amplitude at each x')
@@ -187,6 +219,7 @@ if savePlot:
 	plt.clf()
 else:
 	plt.show()
+	
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
