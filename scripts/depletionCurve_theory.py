@@ -30,6 +30,8 @@ SI_PERM = 1.03e-12
 ELEM_CHARGE = 1.60e-19
 BIAS_RANGE = np.arange(0, 500, 20)
 
+#change font size on plot
+plt.rcParams.update({'font.size': 18})
 
 ### input parameters ###
 try:
